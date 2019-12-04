@@ -164,7 +164,7 @@ class Archiver(object):  # N.B. Also used by import-mbox.py
     """ Intercept index calls and fix up consistency argument """
 
     def index(self, **kwargs):
-        if ES_MAJOR in [5, 6]:
+        if ES_MAJOR in [5, 6, 7]:
             if kwargs.pop('consistency', None):  # drop the key if present
                 if self.wait_for_active_shards:  # replace with wait if defined
                     kwargs['wait_for_active_shards'] = self.wait_for_active_shards
