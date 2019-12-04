@@ -37,36 +37,36 @@ sub someone to the list(s) and add this to their .forward file:
 
 """
 
+import certifi
+import json
+import uuid
+import generators
+import sys
+import traceback
+import logging
+import fnmatch
+import os
+from ponymailconfig import PonymailConfig
+import chardet
+from base64 import standard_b64encode
+import re
+from collections import namedtuple
+import time
+import email.utils
+import hashlib
+from formatflowed import convertToWrapped
+from elasticsearch import VERSION as ES_VERSION
+from elasticsearch import Elasticsearch
 logger = None
 
-from elasticsearch import Elasticsearch
-from elasticsearch import VERSION as ES_VERSION
 ES_MAJOR = ES_VERSION[0]
-from formatflowed import convertToWrapped
-import hashlib
-import email.utils
-import time
-from collections import namedtuple
-import re
-from base64 import standard_b64encode
-import chardet
-from ponymailconfig import PonymailConfig
-import os
-import fnmatch
-import logging
-import traceback
-import sys
-import generators
-import uuid
-import json
-import certifi
 
 # Fetch config
 config = PonymailConfig()
 auth = None
 parseHTML = False
 iBody = None  # N.B. Also used by import-mbox.py
-args=None
+args = None
 dumpDir = None
 
 if config.has_section('mailman') and config.has_option('mailman', 'plugin'):
@@ -78,13 +78,16 @@ elif __name__ == '__main__':
     import argparse
 
 if config.has_option('elasticsearch', 'user'):
-    auth = (config.get('elasticsearch','user'), config.get('elasticsearch','password'))
+    auth = (config.get('elasticsearch', 'user'),
+            config.get('elasticsearch', 'password'))
 
 archiver_generator = config.get("archiver", "generator", fallback="medium")
+
 
 def encode_base64(buff):
     """ Convert bytes to base64 as text string (no newlines) """
     return standard_b64encode(buff).decode('ascii', 'ignore')
+
 
 def parse_attachment(part):
     cd = part.get("Content-Disposition", None)
@@ -96,7 +99,8 @@ def parse_attachment(part):
         if cdtype == "attachment" or cdtype == 'inline':
             fd = part.get_payload(decode=True)
             # Allow for empty string
-            if fd == None: return None, None
+            if fd == None:
+                return None, None
             filename = part.get_filename()
             if filename:
                 print("Found attachment: %s" % filename)
@@ -107,8 +111,9 @@ def parse_attachment(part):
                 h = hashlib.sha256(fd).hexdigest()
                 b64 = encode_base64(fd)
                 attachment['hash'] = h
-                return attachment, b64 # Return meta data and contents separately
+                return attachment, b64  # Return meta data and contents separately
     return None, None
+
 
 def pm_charsets(msg):
     charsets = set({})
@@ -117,7 +122,8 @@ def pm_charsets(msg):
             charsets.update([c])
     return charsets
 
-def normalize_lid(lid): # N.B. Also used by import-mbox.py
+
+def normalize_lid(lid):  # N.B. Also used by import-mbox.py
     """ Ensure that a lid is in standard form, i.e. <a.b.c.d> """
     # first drop any leading or trailing chars
     m = re.search(r"<(.+)>", lid)
@@ -130,7 +136,8 @@ def normalize_lid(lid): # N.B. Also used by import-mbox.py
         sys.exit(-1)
     return lid
 
-class Archiver(object): # N.B. Also used by import-mbox.py
+
+class Archiver(object):  # N.B. Also used by import-mbox.py
     """ A mailman 3 archiver that forwards messages to pony mail. """
     if config.has_section('mailman') and config.has_option('mailman', 'plugin'):
         implementer(IArchiver)
@@ -155,10 +162,11 @@ class Archiver(object): # N.B. Also used by import-mbox.py
     ]
 
     """ Intercept index calls and fix up consistency argument """
+
     def index(self, **kwargs):
-        if ES_MAJOR in [5,6]:
-            if kwargs.pop('consistency', None): # drop the key if present
-                if self.wait_for_active_shards: # replace with wait if defined
+        if ES_MAJOR in [5, 6]:
+            if kwargs.pop('consistency', None):  # drop the key if present
+                if self.wait_for_active_shards:  # replace with wait if defined
                     kwargs['wait_for_active_shards'] = self.wait_for_active_shards
         return self.es.index(
             **kwargs
@@ -171,13 +179,16 @@ class Archiver(object): # N.B. Also used by import-mbox.py
             import html2text
             self.html2text = html2text.html2text
         self.dbname = config.get("elasticsearch", "dbname")
-        ssl = config.get("elasticsearch", "ssl", fallback="false").lower() == 'true'
+        ssl = config.get("elasticsearch", "ssl",
+                         fallback="false").lower() == 'true'
         # Always allow this to be set; will be replaced as necessary by wait_for_active_shards
-        self.consistency = config.get('elasticsearch', 'write', fallback='quorum')
+        self.consistency = config.get(
+            'elasticsearch', 'write', fallback='quorum')
         if ES_MAJOR == 2:
             pass
-        elif ES_MAJOR in [5,6]:
-            self.wait_for_active_shards = config.get('elasticsearch', 'wait', fallback=1)
+        elif ES_MAJOR in [5, 6]:
+            self.wait_for_active_shards = config.get(
+                'elasticsearch', 'wait', fallback=1)
         else:
             raise Exception("Unexpected elasticsearch version ", ES_VERSION)
         self.cropout = config.get("debug", "cropout", fallback=None)
@@ -196,28 +207,29 @@ class Archiver(object): # N.B. Also used by import-mbox.py
         if backup != "":
             dbs.append(
                 {
-                'host': backup,
-                'port': int(config.get("elasticsearch", "port")),
-                'use_ssl': ssl,
-                'url_prefix': uri,
-                'http_auth': auth,
-                'ca_certs': certifi.where()
-            }
+                    'host': backup,
+                    'port': int(config.get("elasticsearch", "port")),
+                    'use_ssl': ssl,
+                    'url_prefix': uri,
+                    'http_auth': auth,
+                    'ca_certs': certifi.where()
+                }
             )
         # If we have a dump dir, we can risk failing the connection.
         if dumpDir:
             try:
                 self.es = Elasticsearch(dbs,
-                    max_retries=5,
-                    retry_on_timeout=True
-                    )
+                                        max_retries=5,
+                                        retry_on_timeout=True
+                                        )
             except:
-                print("ES connection failed, but dumponfail specified, dumping to %s" % dumpDir)
+                print(
+                    "ES connection failed, but dumponfail specified, dumping to %s" % dumpDir)
         else:
             self.es = Elasticsearch(dbs,
-                max_retries=5,
-                retry_on_timeout=True
-                )
+                                    max_retries=5,
+                                    retry_on_timeout=True
+                                    )
 
     def msgfiles(self, msg):
         attachments = []
@@ -228,7 +240,6 @@ class Archiver(object): # N.B. Also used by import-mbox.py
                 attachments.append(part_meta)
                 contents[part_meta['hash']] = part_file
         return attachments, contents
-
 
     def msgbody(self, msg):
         body = None
@@ -253,7 +264,8 @@ class Archiver(object): # N.B. Also used by import-mbox.py
 
         # this requires a GPL lib, user will have to install it themselves
         if firstHTML and (not body or len(body) <= 1 or (iBody and str(body).find(str(iBody)) != -1)):
-            body = self.html2text(firstHTML.decode("utf-8", 'ignore') if type(firstHTML) is bytes else firstHTML)
+            body = self.html2text(firstHTML.decode(
+                "utf-8", 'ignore') if type(firstHTML) is bytes else firstHTML)
 
         # See issue#463
         # This code will try at most one charset
@@ -263,7 +275,8 @@ class Archiver(object): # N.B. Also used by import-mbox.py
                 body = body.decode(charset) if type(body) is bytes else body
                 # at this point body can no longer be bytes
             except:
-                body = body.decode('utf-8', errors='replace') if type(body) is bytes else body
+                body = body.decode(
+                    'utf-8', errors='replace') if type(body) is bytes else body
                 # at this point body can no longer be bytes
 
         return body
@@ -290,18 +303,21 @@ class Archiver(object): # N.B. Also used by import-mbox.py
             else:
                 lid = lid.replace(self.cropout, "")
 
-        defaultEmptyString = lambda value: value and str(value) or ""
-        msg_metadata = dict([(k, defaultEmptyString(msg.get(k))) for k in self.keys])
-        mid = hashlib.sha224(str("%s-%s" % (lid, msg_metadata['archived-at'])).encode('utf-8')).hexdigest() + "@" + (lid if lid else "none")
-        for key in ['to','from','subject','message-id']:
+        def defaultEmptyString(value): return value and str(value) or ""
+        msg_metadata = dict([(k, defaultEmptyString(msg.get(k)))
+                             for k in self.keys])
+        mid = hashlib.sha224(str("%s-%s" % (lid, msg_metadata['archived-at'])).encode(
+            'utf-8')).hexdigest() + "@" + (lid if lid else "none")
+        for key in ['to', 'from', 'subject', 'message-id']:
             try:
                 hval = ""
                 if msg_metadata.get(key):
                     for t in email.header.decode_header(msg_metadata[key]):
                         if t[1] == None or t[1].find("8bit") != -1:
-                            hval += t[0].decode('utf-8') if type(t[0]) is bytes else t[0]
+                            hval += t[0].decode('utf-8') if type(t[0]
+                                                                 ) is bytes else t[0]
                         else:
-                            hval += t[0].decode(t[1],errors='ignore')
+                            hval += t[0].decode(t[1], errors='ignore')
                     msg_metadata[key] = hval
             except Exception as err:
                 print("Could not decode headers, ignoring..: %s" % err)
@@ -314,8 +330,8 @@ class Archiver(object): # N.B. Also used by import-mbox.py
             mdate = email.utils.parsedate_tz(msg_metadata.get('archived-at'))
         elif not mdate:
             print("Date (%s) seems totally wrong, setting to _now_ instead." % mdate)
-            mdate = time.gmtime() # Get a standard 9-tuple
-            mdate = mdate + (0, ) # Fake a TZ (10th element)
+            mdate = time.gmtime()  # Get a standard 9-tuple
+            mdate = mdate + (0, )  # Fake a TZ (10th element)
 
         # mdate calculations are all done, prepare the index entry
         epoch = email.utils.mktime_tz(mdate)
@@ -344,7 +360,8 @@ class Archiver(object): # N.B. Also used by import-mbox.py
         if body is not None or attachments:
             pmid = mid
             try:
-                mid = generators.generate(archiver_generator, msg, body, lid, attachments)
+                mid = generators.generate(
+                    archiver_generator, msg, body, lid, attachments)
             except Exception as err:
                 if logger:
                     logger.warning("Could not generate MID: %s", err)
@@ -376,7 +393,7 @@ class Archiver(object): # N.B. Also used by import-mbox.py
                 'attachments': attachments
             }
 
-        return  ojson, contents, msg_metadata, irt
+        return ojson, contents, msg_metadata, irt
 
     def archive_message(self, mlist, msg, raw_msg):
         """Send the message to the archiver.
@@ -397,10 +414,12 @@ class Archiver(object): # N.B. Also used by import-mbox.py
         elif hasattr(mlist, 'archive_policy') and mlist.archive_policy is not ArchivePolicy.public:
             private = True
 
-        ojson, contents, msg_metadata, irt = self.compute_updates(lid, private, msg)
+        ojson, contents, msg_metadata, irt = self.compute_updates(
+            lid, private, msg)
         if not ojson:
-            _id = msg.get('message-id') or msg.get('Subject') or msg.get("Date")
-            raise Exception("Could not parse message %s for %s" % (_id,lid))
+            _id = msg.get(
+                'message-id') or msg.get('Subject') or msg.get("Date")
+            raise Exception("Could not parse message %s for %s" % (_id, lid))
 
         if args.dry:
             print("**** Dry run, not saving message to database *****")
@@ -413,7 +432,7 @@ class Archiver(object): # N.B. Also used by import-mbox.py
                         index=self.dbname,
                         doc_type="attachment",
                         id=key,
-                        body = {
+                        body={
                             'source': contents[key]
                         }
                     )
@@ -422,16 +441,16 @@ class Archiver(object): # N.B. Also used by import-mbox.py
                 index=self.dbname,
                 doc_type="mbox",
                 id=ojson['mid'],
-                consistency = self.consistency,
-                body = ojson
+                consistency=self.consistency,
+                body=ojson
             )
 
             self.index(
                 index=self.dbname,
                 doc_type="mbox_source",
                 id=ojson['mid'],
-                consistency = self.consistency,
-                body = {
+                consistency=self.consistency,
+                body={
                     "message-id": msg_metadata['message-id'],
                     "source": self.mbox_source(raw_msg)
                 }
@@ -440,7 +459,8 @@ class Archiver(object): # N.B. Also used by import-mbox.py
         # We'll leave it to another process to pick up the slack.
         except Exception as err:
             if dumpDir:
-                print("Pushing to ES failed, but dumponfail specified, dumping JSON docs")
+                print(
+                    "Pushing to ES failed, but dumponfail specified, dumping JSON docs")
                 uid = uuid.uuid4()
                 mboxPath = os.path.join(dumpDir, "%s.json" % uid)
                 with open(mboxPath, "w") as f:
@@ -452,9 +472,10 @@ class Archiver(object): # N.B. Also used by import-mbox.py
                             "source": self.mbox_source(raw_msg)
                         },
                         'attachments': contents
-                    },f , indent = 2)
+                    }, f, indent=2)
                     f.close()
-                sys.exit(0) # We're exiting here, the rest can't be done without ES
+                # We're exiting here, the rest can't be done without ES
+                sys.exit(0)
             # otherwise fail as before
             raise err
 
@@ -464,8 +485,8 @@ class Archiver(object): # N.B. Also used by import-mbox.py
                 index=self.dbname,
                 doc_type="mailinglists",
                 id=lid,
-                consistency = self.consistency,
-                body = {
+                consistency=self.consistency,
+                body={
                     'list': lid,
                     'name': mlist.list_name,
                     'description': mlist.description,
@@ -474,7 +495,8 @@ class Archiver(object): # N.B. Also used by import-mbox.py
             )
 
         if logger:
-            logger.info("Pony Mail archived message %s successfully", ojson['mid'])
+            logger.info(
+                "Pony Mail archived message %s successfully", ojson['mid'])
         oldrefs = []
 
         # Is this a direct reply to a pony mail email?
@@ -483,16 +505,17 @@ class Archiver(object): # N.B. Also used by import-mbox.py
             if dm:
                 cid = dm.group(1)
                 mid = dm.group(2)
-                if self.es.exists(index = self.dbname, doc_type = 'account', id = cid):
-                    doc = self.es.get(index = self.dbname, doc_type = 'account', id = cid)
+                if self.es.exists(index=self.dbname, doc_type='account', id=cid):
+                    doc = self.es.get(index=self.dbname,
+                                      doc_type='account', id=cid)
                     if doc:
                         oldrefs.append(cid)
                         # N.B. no index is supplied, so ES will generate one
                         self.index(
                             index=self.dbname,
                             doc_type="notifications",
-                            consistency = self.consistency,
-                            body = {
+                            consistency=self.consistency,
+                            body={
                                 'type': 'direct',
                                 'recipient': cid,
                                 'list': lid,
@@ -509,15 +532,17 @@ class Archiver(object): # N.B. Also used by import-mbox.py
                             }
                         )
                         if logger:
-                            logger.info("Notification sent to %s for %s", cid, mid)
+                            logger.info(
+                                "Notification sent to %s for %s", cid, mid)
 
         # Are there indirect replies to pony emails?
         if msg_metadata.get('references'):
             for im in re.finditer(r"pony-([a-f0-9]+)-([a-f0-9]+)@", msg_metadata.get('references')):
                 cid = im.group(1)
                 mid = im.group(2)
-                if self.es.exists(index = self.dbname, doc_type = 'account', id = cid):
-                    doc = self.es.get(index = self.dbname, doc_type = 'account', id = cid)
+                if self.es.exists(index=self.dbname, doc_type='account', id=cid):
+                    doc = self.es.get(index=self.dbname,
+                                      doc_type='account', id=cid)
 
                     # does the user want to be notified of indirect replies?
                     if doc and 'preferences' in doc['_source'] and doc['_source']['preferences'].get('notifications') == 'indirect' and not cid in oldrefs:
@@ -525,9 +550,9 @@ class Archiver(object): # N.B. Also used by import-mbox.py
                         # N.B. no index is supplied, so ES will generate one
                         self.index(
                             index=self.dbname,
-                            consistency = self.consistency,
+                            consistency=self.consistency,
                             doc_type="notifications",
-                            body = {
+                            body={
                                 'type': 'indirect',
                                 'recipient': cid,
                                 'list': lid,
@@ -544,7 +569,8 @@ class Archiver(object): # N.B. Also used by import-mbox.py
                             }
                         )
                         if logger:
-                            logger.info("Notification sent to %s for %s", cid, mid)
+                            logger.info(
+                                "Notification sent to %s for %s", cid, mid)
         return lid, ojson['mid']
 
     def mbox_source(self, b):
@@ -566,32 +592,33 @@ class Archiver(object): # N.B. Also used by import-mbox.py
         """
         return None
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Command line options.')
     parser.add_argument('--lid', dest='lid', type=str, nargs=1,
-                       help='Alternate specific list ID')
+                        help='Alternate specific list ID')
     parser.add_argument('--altheader', dest='altheader', type=str, nargs=1,
-                       help='Alternate header for list ID')
+                        help='Alternate header for list ID')
     parser.add_argument('--allowfrom', dest='allowfrom', type=str, nargs=1,
-                       help='(optional) source IP (mail server) to allow posts from, ignore if no match')
+                        help='(optional) source IP (mail server) to allow posts from, ignore if no match')
     parser.add_argument('--ignore', dest='ignorefrom', type=str, nargs=1,
-                       help='Sender/list to ignore input from (owner etc)')
+                        help='Sender/list to ignore input from (owner etc)')
     parser.add_argument('--private', dest='private', action='store_true',
-                       help='This is a private archive')
+                        help='This is a private archive')
     parser.add_argument('--makedate', dest='makedate', action='store_true',
-                       help='Use the archive timestamp as the email date instead of the Date header')
+                        help='Use the archive timestamp as the email date instead of the Date header')
     parser.add_argument('--quiet', dest='quiet', action='store_true',
-                       help='Do not exit -1 if the email could not be parsed')
+                        help='Do not exit -1 if the email could not be parsed')
     parser.add_argument('--verbose', dest='verbose', action='store_true',
-                       help='Output additional log messages')
+                        help='Output additional log messages')
     parser.add_argument('--html2text', dest='html2text', action='store_true',
-                       help='Try to convert HTML to text if no text/plain message is found')
+                        help='Try to convert HTML to text if no text/plain message is found')
     parser.add_argument('--dry', dest='dry', action='store_true',
-                       help='Do not save emails to elasticsearch, only test parsing')
+                        help='Do not save emails to elasticsearch, only test parsing')
     parser.add_argument('--dumponfail', dest='dump',
-                       help='If pushing to ElasticSearch fails, dump documents in JSON format to this directory and fail silently.')
+                        help='If pushing to ElasticSearch fails, dump documents in JSON format to this directory and fail silently.')
     parser.add_argument('--generator', dest='generator',
-                       help='Override the generator.')
+                        help='Override the generator.')
     args = parser.parse_args()
 
     if args.html2text:
@@ -608,7 +635,7 @@ if __name__ == '__main__':
     if args.generator:
         archiver_generator = args.generator
 
-    archie = Archiver(parseHTML = parseHTML)
+    archie = Archiver(parseHTML=parseHTML)
     # use binary input so parser can use appropriate charset
     input_stream = sys.stdin.buffer
 
@@ -646,8 +673,7 @@ if __name__ == '__main__':
             except:
                 msg.add_header('list-id', args.lid[0])
 
-
-        #Ignore based on --ignore flag?
+        # Ignore based on --ignore flag?
         if args.ignorefrom:
             ignorefrom = args.ignorefrom[0]
             if fnmatch.fnmatch(msg.get("from"), ignorefrom) or (msg.get("list-id") and fnmatch.fnmatch(msg.get("list-id"), ignorefrom)):
@@ -682,11 +708,13 @@ if __name__ == '__main__':
         if 'list-id' in msg:
             if not msg.get('archived-at'):
                 msg.add_header('archived-at', email.utils.formatdate())
-            list_data = namedtuple('importmsg', ['list_id', 'archive_public'])(list_id = msg.get('list-id'), archive_public=ispublic)
+            list_data = namedtuple('importmsg', ['list_id', 'archive_public'])(
+                list_id=msg.get('list-id'), archive_public=ispublic)
 
             try:
                 lid, mid = archie.archive_message(list_data, msg, msgstring)
-                print("%s: Done archiving to %s as %s!" % (email.utils.formatdate(), lid, mid))
+                print("%s: Done archiving to %s as %s!" %
+                      (email.utils.formatdate(), lid, mid))
             except Exception as err:
                 if args.verbose:
                     traceback.print_exc()
@@ -699,8 +727,8 @@ if __name__ == '__main__':
         #                           last traceback    1st entry, 2nd field
         line = traceback.extract_tb(sys.exc_info()[2])[0][1]
         if args.quiet:
-            print("Could not parse email, but exiting quietly as --quiet is on: %s (@ %s)" % (err, line))
+            print(
+                "Could not parse email, but exiting quietly as --quiet is on: %s (@ %s)" % (err, line))
         else:
             print("Could not parse email: %s (@ %s)" % (err, line))
             sys.exit(-1)
-
