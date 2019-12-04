@@ -184,9 +184,7 @@ class Archiver(object):  # N.B. Also used by import-mbox.py
         # Always allow this to be set; will be replaced as necessary by wait_for_active_shards
         self.consistency = config.get(
             'elasticsearch', 'write', fallback='quorum')
-        if ES_MAJOR == 2:
-            pass
-        elif ES_MAJOR in [5, 6]:
+        if ES_MAJOR in [7]:
             self.wait_for_active_shards = config.get(
                 'elasticsearch', 'wait', fallback=1)
         else:
@@ -429,8 +427,8 @@ class Archiver(object):  # N.B. Also used by import-mbox.py
             if contents:
                 for key in contents:
                     self.index(
-                        index=self.dbname,
-                        doc_type="attachment",
+                        index=self.dbname + "_attachment",
+                        doc_type="_doc",
                         id=key,
                         body={
                             'source': contents[key]
@@ -438,16 +436,16 @@ class Archiver(object):  # N.B. Also used by import-mbox.py
                     )
 
             self.index(
-                index=self.dbname,
-                doc_type="mbox",
+                index=self.dbname + "_mbox",
+                doc_type="_doc",
                 id=ojson['mid'],
                 consistency=self.consistency,
                 body=ojson
             )
 
             self.index(
-                index=self.dbname,
-                doc_type="mbox_source",
+                index=self.dbname + "_mbox_source",
+                doc_type="_doc",
                 id=ojson['mid'],
                 consistency=self.consistency,
                 body={
@@ -482,8 +480,8 @@ class Archiver(object):  # N.B. Also used by import-mbox.py
         # If MailMan and list info is present, save/update it in ES:
         if hasattr(mlist, 'description') and hasattr(mlist, 'list_name') and mlist.description and mlist.list_name:
             self.index(
-                index=self.dbname,
-                doc_type="mailinglists",
+                index=self.dbname + "_mailinglists",
+                doc_type="_doc",
                 id=lid,
                 consistency=self.consistency,
                 body={
@@ -505,15 +503,15 @@ class Archiver(object):  # N.B. Also used by import-mbox.py
             if dm:
                 cid = dm.group(1)
                 mid = dm.group(2)
-                if self.es.exists(index=self.dbname, doc_type='account', id=cid):
-                    doc = self.es.get(index=self.dbname,
-                                      doc_type='account', id=cid)
+                if self.es.exists(index=self.dbname+"_account", doc_type='_doc', id=cid):
+                    doc = self.es.get(index=self.dbname+"_account",
+                                      doc_type='_doc', id=cid)
                     if doc:
                         oldrefs.append(cid)
                         # N.B. no index is supplied, so ES will generate one
                         self.index(
-                            index=self.dbname,
-                            doc_type="notifications",
+                            index=self.dbname+"_notifications",
+                            doc_type="_doc",
                             consistency=self.consistency,
                             body={
                                 'type': 'direct',
@@ -540,18 +538,18 @@ class Archiver(object):  # N.B. Also used by import-mbox.py
             for im in re.finditer(r"pony-([a-f0-9]+)-([a-f0-9]+)@", msg_metadata.get('references')):
                 cid = im.group(1)
                 mid = im.group(2)
-                if self.es.exists(index=self.dbname, doc_type='account', id=cid):
-                    doc = self.es.get(index=self.dbname,
-                                      doc_type='account', id=cid)
+                if self.es.exists(index=self.dbname+"_account", doc_type='_doc', id=cid):
+                    doc = self.es.get(index=self.dbname+"_account",
+                                      doc_type='_doc', id=cid)
 
                     # does the user want to be notified of indirect replies?
                     if doc and 'preferences' in doc['_source'] and doc['_source']['preferences'].get('notifications') == 'indirect' and not cid in oldrefs:
                         oldrefs.append(cid)
                         # N.B. no index is supplied, so ES will generate one
                         self.index(
-                            index=self.dbname,
+                            index=self.dbname+"_notifications",
                             consistency=self.consistency,
-                            doc_type="notifications",
+                            doc_type="_doc",
                             body={
                                 'type': 'indirect',
                                 'recipient': cid,
