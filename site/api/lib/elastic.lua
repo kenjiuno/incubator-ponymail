@@ -40,6 +40,19 @@ local function checkReturn(code, ok404)
     end
 end
 
+local function checkReturnDetail(code, ok404, body)
+    if type(code) == "number" then -- we have a valid HTTP status code
+        -- ignore expected return codes here
+        -- index returns 201 when an entry is created
+        if code ~= 200 and code ~= 201 and not (ok404 and code == 404) then
+            -- code is called by 2nd-level functions only, so level 4 is the external caller
+            error("Backend Database returned code " .. code .. ": " .. body, 4)
+        end
+    else
+        error("Could not contact database backend: " .. code .. "!", 4)
+    end
+end
+
 -- DO common request processing:
 -- Encode JSON (as necessary)
 -- Issue request
@@ -60,7 +73,7 @@ local function performRequest(url, query, ok404)
         js = JSON.encode(query)
     end
     local result, hc = http.request(url, js)
-    checkReturn(hc, ok404)
+    checkReturnDetail(hc, ok404, result)
     local json = JSON.decode(result)
     -- TODO should we return the http status code?
     -- This might be necessary if codes such as 404 did not cause an error
