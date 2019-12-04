@@ -288,8 +288,7 @@ def createIndex():
               "type" : "string"
             },
             "subject" : {
-              "type" : "string",
-              "fielddata": True # dropped later if DB_MAJOR==2
+              "type" : "string"
             },
             "to" : {
               "type" : "string"
@@ -417,8 +416,7 @@ def createIndex():
               "type" : "long"
             },
             "subject" : {
-              "type" : "string",
-              "fielddata": True # dropped later if DB_MAJOR==2
+              "type" : "string"
             },
             "to" : {
               "type" : "string"
@@ -430,10 +428,6 @@ def createIndex():
           }
         }
     }
-
-    if DB_MAJOR == 2: # ES 2 handles fielddata differently
-        del mappings['mbox']['properties']['subject']['fielddata']
-        del mappings['notifications']['properties']['subject']['fielddata']
 
     res = es.indices.create(index = dbname, body = {
                 "mappings" : mappings,
