@@ -84,7 +84,7 @@ local function getHits(query, size, doc, sitem)
     sitem = sitem or "epoch"
     size = size or 10
     query = query:gsub(" ", "+")
-    local url = config.es_url .. doc .. "/_search?q="..query.."&sort=" .. sitem .. ":desc&size=" .. size
+    local url = config.es_url:gsub("DOCTYPE", doc) .. "_search?q="..query.."&sort=" .. sitem .. ":desc&size=" .. size
     local json = performRequest(url)
     local out = {}
     if json and json.hits and json.hits.hits then
@@ -102,7 +102,7 @@ end
 
 -- Get a single document
 local function getDoc (ty, id, ok404)
-    local url = config.es_url  .. ty .. "/" .. id
+    local url = config.es_url:gsub("DOCTYPE", ty) .. id
     local json, status = performRequest(url, nil, ok404)
     if json and json._source then
         json._source.request_id = json._id
@@ -130,7 +130,7 @@ local function getHeaders(query, size, doc)
     doc = doc or "mbox"
     size = size or 10
     query = query:gsub(" ", "+")
-    local url = config.es_url  .. doc .. "/_search?_source_exclude=body&q="..query.."&sort=epoch:desc&size=" .. size
+    local url = config.es_url:gsub("DOCTYPE", doc) .. "_search?_source_exclude=body&q="..query.."&sort=epoch:desc&size=" .. size
     local json = performRequest(url)
     local out = {}
     if json and json.hits and json.hits.hits then
@@ -147,7 +147,7 @@ local function getHeadersReverse(query, size, doc)
     doc = doc or "mbox"
     size = size or 10
     query = query:gsub(" ", "+")
-    local url = config.es_url .. doc .. "/_search?_source_exclude=body&q="..query.."&sort=epoch:desc&size=" .. size
+    local url = config.es_url:gsub("DOCTYPE", doc) .. "_search?_source_exclude=body&q="..query.."&sort=epoch:desc&size=" .. size
     local json = performRequest(url)
     local out = {}
     if json and json.hits and json.hits.hits then
@@ -171,7 +171,7 @@ end
 -- Do a raw ES query with a JSON query
 local function raw(query, doctype)
     doctype = doctype or default_doc
-    local url = config.es_url .. doctype .. "/_search"
+    local url = config.es_url:gsub("DOCTYPE", doctype) .. "_search"
     local json = performRequest(url, query)
     if doctype == "mbox" and json and json.hits and json.hits.hits then
         -- Check if the query returns the body attribute
@@ -212,7 +212,7 @@ local function scroll(sidOrQuery, doctype)
                 hasBody = true
             end
         end
-        local url = config.es_url .. doctype .. "/_search?scroll=1m"
+        local url = config.es_url:gsub("DOCTYPE", doctype) .. "_search?scroll=1m"
         -- start off the scroll
         json = performRequest(url, query)
     else
@@ -221,7 +221,7 @@ local function scroll(sidOrQuery, doctype)
         queryHasBody[sid] = nil -- drop old entry (sid may change)
         -- We have to do some gsubbing here, as ES expects us to be at the root of the ES URL
         -- But in case we're being proxied, let's just cut off the last part of the URL
-        local url = config.es_url:gsub("[^/]+/?$", "") .. "/_search/scroll?scroll=1m&scroll_id=" .. sid
+        local url = config.es_url:gsub("DOCTYPE", doctype):gsub("[^/]+/?$", "") .. "/_search/scroll?scroll=1m&scroll_id=" .. sid
         -- continue the scroll
         json = performRequest(url)
     end
@@ -241,14 +241,14 @@ end
 
 -- delete a scroll id after use
 local function clear_scroll(sid)
-    local url = config.es_url:gsub("[^/]+/?$", "") .. "/_search/scroll?scroll_id=" .. sid
+    local url = config.es_url:gsub("DOCTYPE", "mbox"):gsub("[^/]+/?$", "") .. "/_search/scroll?scroll_id=" .. sid
     return performDelete(url, true)
 end
 
 -- Update a document
 local function update(doctype, id, query, consistency)
     doctype = doctype or default_doc
-    local url = config.es_url .. doctype .. "/" .. id .. "/_update"
+    local url = config.es_url:gsub("DOCTYPE", doctype) .. id .. "/_update"
     if consistency then
         url = url .. "?write_consistency=" .. consistency
     end
@@ -261,7 +261,7 @@ local function index(id, ty, body, consistency)
     if not id then
         error("id parameter must be provided", 3)
     end
-    local url = config.es_url .. ty .. "/" .. id
+    local url = config.es_url:gsub("DOCTYPE", ty) .. id
     if consistency then
         url = url .. "?write_consistency=" .. consistency
     end
