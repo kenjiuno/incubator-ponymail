@@ -113,7 +113,7 @@ if args.defaults:
     port = 9200
     dbname = "ponymail"
     mlserver = "localhost"
-    mldom = "example.org"
+    mldom = "*"
     wc = "Y"
     wce = True
     shards = 1
@@ -205,25 +205,8 @@ while replicas < 0:
 print("Okay, I got all I need, setting up Pony Mail...")
 
 
-def createIndex():
-    # Check if index already exists
-    if es.indices.exists(dbname):
-        if args.soe:
-            print(
-                "ElasticSearch index '%s' already exists and SOE set, exiting quietly" % dbname)
-            sys.exit(0)
-        else:
-            print("Error: ElasticSearch index '%s' already exists!" % dbname)
-            sys.exit(-1)
-
-    print("Creating index " + dbname)
-
-    settings = {
-        "number_of_shards":   shards,
-        "number_of_replicas": replicas
-    }
-
-    mappings = {
+def createIndexes():
+    indexes = {
         "mbox": {
             "properties": {
                 "@import_timestamp": {
@@ -458,9 +441,27 @@ def createIndex():
         }
     }
 
-    if DB_MAJOR == 2:  # ES 2 handles fielddata differently
-        del mappings['mbox']['properties']['subject']['fielddata']
-        del mappings['notifications']['properties']['subject']['fielddata']
+    for key, value in indexes.items():
+        createIndex(dbname + "_" + key, value)
+
+
+def createIndex(dbname, mappings):
+    # Check if index already exists
+    if es.indices.exists(dbname):
+        if args.soe:
+            print(
+                "ElasticSearch index '%s' already exists and SOE set, exiting quietly" % dbname)
+            sys.exit(0)
+        else:
+            print("Error: ElasticSearch index '%s' already exists!" % dbname)
+            sys.exit(-1)
+
+    print("Creating index " + dbname)
+
+    settings = {
+        "number_of_shards":   shards,
+        "number_of_replicas": replicas
+    }
 
     res = es.indices.create(index=dbname, body={
         "mappings": mappings,
@@ -511,7 +512,7 @@ if DB_MAJOR == 0:  # not known
 
 if not args.noi:
     try:
-        createIndex()
+        createIndexes()
     except ElasticsearchException as e:
         print("Index creation failed: %s" % e)
         sys.exit(1)
