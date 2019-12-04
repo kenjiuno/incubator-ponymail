@@ -21,6 +21,7 @@ local http = require 'socket.http'
 local JSON = require 'cjson'
 local config = require 'lib/config'
 local mime = require 'mime'
+local ltn12 = require 'ltn12'
 local default_doc = "mbox"
 
 -- http code return check
@@ -75,9 +76,10 @@ local function performRequest(url, query, ok404)
     local result, hc = http.request{
         url = url,
         headers = {
+            ["Content-Length"] = string.len(js)
             ["Content-Type"] = "application/json"
         },
-        source = js
+        source = ltn12.source.string(js)
     }
     checkReturnDetail(hc, ok404, result)
     local json = JSON.decode(result)
