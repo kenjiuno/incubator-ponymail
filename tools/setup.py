@@ -281,7 +281,6 @@ def createIndexes():
                 },
                 "subject": {
                     "type": "text",
-                    "fielddata": True  # dropped later if DB_MAJOR==2
                 },
                 "to": {
                     "type": "text"
