@@ -321,17 +321,13 @@ def createIndex():
           }
         },
         "mailinglists" : {
-          "_all": {
-            "enabled": False # this doc type is not searchable
-          },
           "properties" : {
             "description" : {
               "type" : "string",
               "index" : "not_analyzed"
             },
             "list" : {
-              "type" : "string",
-#               "index" : "not_analyzed"
+              "type" : "string"
             },
             "name" : {
               "type" : "string",
@@ -340,9 +336,6 @@ def createIndex():
           }
         },
         "account" : {
-          "_all": {
-            "enabled": False # this doc type is not searchable
-          },
           "properties" : {
             "cid" : {
               "type" : "string",
@@ -390,9 +383,6 @@ def createIndex():
           }
         },
         "notifications" : {
-          "_all": {
-            "enabled": False # this doc type is not searchable
-          },
           "properties" : {
             "date" : {
               "type" : "date",
@@ -403,24 +393,21 @@ def createIndex():
               "type" : "long"
             },
             "from" : {
-              "type" : "string",
-#               "index" : "not_analyzed"
+              "type" : "string"
             },
             "in-reply-to" : {
               "type" : "string",
                "index" : "not_analyzed"
             },
             "list" : {
-              "type" : "string",
-#               "index" : "not_analyzed"
+              "type" : "string"
             },
             "message-id" : {
               "type" : "string",
               "index" : "not_analyzed"
             },
             "mid" : {
-              "type" : "string",
-#               "index" : "not_analyzed"
+              "type" : "string"
             },
             "private" : {
               "type" : "boolean"
@@ -435,11 +422,9 @@ def createIndex():
             "subject" : {
               "type" : "string",
               "fielddata": True # dropped later if DB_MAJOR==2
-#               "index" : "not_analyzed"
             },
             "to" : {
-              "type" : "string",
-#               "index" : "not_analyzed"
+              "type" : "string"
             },
             "type" : {
               "type" : "string",
