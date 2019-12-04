@@ -216,15 +216,15 @@ def createIndexes():
                 "attachments": {
                     "properties": {
                         "content_type": {
-                            "type": "string",
+                            "type": "text",
                             "index": "not_analyzed"
                         },
                         "filename": {
-                            "type": "string",
+                            "type": "text",
                             "index": "not_analyzed"
                         },
                         "hash": {
-                            "type": "string",
+                            "type": "text",
                             "index": "not_analyzed"
                         },
                         "size": {
@@ -233,10 +233,10 @@ def createIndexes():
                     }
                 },
                 "body": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "cc": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "date": {
                     "type": "date",
@@ -249,42 +249,42 @@ def createIndexes():
                     "index": "not_analyzed"
                 },
                 "from": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "from_raw": {
-                    "type": "string",
+                    "type": "text",
                     "index": "not_analyzed"
                 },
                 "in-reply-to": {
-                    "type": "string",
+                    "type": "text",
                     "index": "not_analyzed"
                 },
                 "list": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "list_raw": {
-                    "type": "string",
+                    "type": "text",
                     "index": "not_analyzed"
                 },
                 "message-id": {
-                    "type": "string",
+                    "type": "text",
                     "index": "not_analyzed"
                 },
                 "mid": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "private": {
                     "type": "boolean"
                 },
                 "references": {
-                    "type": "string"
+                    "type": "text"
                 },
                 "subject": {
-                    "type": "string",
+                    "type": "text",
                     "fielddata": True  # dropped later if DB_MAJOR==2
                 },
                 "to": {
-                    "type": "string"
+                    "type": "text"
                 }
             }
         },
@@ -304,11 +304,11 @@ def createIndexes():
                     "type": "binary"
                 },
                 "message-id": {
-                    "type": "string",
+                    "type": "text",
                     "index": "not_analyzed"
                 },
                 "mid": {
-                    "type": "string"
+                    "type": "text"
                 }
             }
         },
@@ -318,15 +318,15 @@ def createIndexes():
             },
             "properties": {
                 "description": {
-                    "type": "string",
+                    "type": "text",
                     "index": "not_analyzed"
                 },
                 "list": {
-                    "type": "string",
+                    "type": "text",
                     #               "index" : "not_analyzed"
                 },
                 "name": {
-                    "type": "string",
+                    "type": "text",
                     "index": "not_analyzed"
                 }
             }
@@ -337,7 +337,7 @@ def createIndexes():
             },
             "properties": {
                 "cid": {
-                    "type": "string",
+                    "type": "text",
                     "index": "not_analyzed"
                 },
                 "credentials": {
@@ -346,15 +346,15 @@ def createIndexes():
                             "type": "object"
                         },
                         "email": {
-                            "type": "string",
+                            "type": "text",
                             "index": "not_analyzed"
                         },
                         "fullname": {
-                            "type": "string",
+                            "type": "text",
                             "index": "not_analyzed"
                         },
                         "uid": {
-                            "type": "string",
+                            "type": "text",
                             "index": "not_analyzed"
                         }
                     }
@@ -362,21 +362,21 @@ def createIndexes():
                 "internal": {
                     "properties": {
                         "cookie": {
-                            "type": "string",
+                            "type": "text",
                             "index": "not_analyzed"
                         },
                         "ip": {
-                            "type": "string",
+                            "type": "text",
                             "index": "not_analyzed"
                         },
                         "oauth_used": {
-                            "type": "string",
+                            "type": "text",
                             "index": "not_analyzed"
                         }
                     }
                 },
                 "request_id": {
-                    "type": "string",
+                    "type": "text",
                     "index": "not_analyzed"
                 }
             }
@@ -395,46 +395,46 @@ def createIndexes():
                     "type": "long"
                 },
                 "from": {
-                    "type": "string",
+                    "type": "text",
                     #               "index" : "not_analyzed"
                 },
                 "in-reply-to": {
-                    "type": "string",
+                    "type": "text",
                     "index": "not_analyzed"
                 },
                 "list": {
-                    "type": "string",
+                    "type": "text",
                     #               "index" : "not_analyzed"
                 },
                 "message-id": {
-                    "type": "string",
+                    "type": "text",
                     "index": "not_analyzed"
                 },
                 "mid": {
-                    "type": "string",
+                    "type": "text",
                     #               "index" : "not_analyzed"
                 },
                 "private": {
                     "type": "boolean"
                 },
                 "recipient": {
-                    "type": "string",
+                    "type": "text",
                     "index": "not_analyzed"
                 },
                 "seen": {
                     "type": "long"
                 },
                 "subject": {
-                    "type": "string",
+                    "type": "text",
                     "fielddata": True  # dropped later if DB_MAJOR==2
                     #               "index" : "not_analyzed"
                 },
                 "to": {
-                    "type": "string",
+                    "type": "text",
                     #               "index" : "not_analyzed"
                 },
                 "type": {
-                    "type": "string",
+                    "type": "text",
                     "index": "not_analyzed"
                 }
             }
