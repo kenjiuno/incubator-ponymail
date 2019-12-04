@@ -216,16 +216,16 @@ def createIndexes():
                 "attachments": {
                     "properties": {
                         "content_type": {
-                            "type": "text",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": True
                         },
                         "filename": {
-                            "type": "text",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": True
                         },
                         "hash": {
-                            "type": "text",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": True
                         },
                         "size": {
                             "type": "long"
@@ -242,33 +242,33 @@ def createIndexes():
                     "type": "date",
                     "store": True,
                     "format": "yyyy/MM/dd HH:mm:ss",
-                    "index": "not_analyzed"
+                    "index": True
                 },
                 "epoch": {  # number of seconds since the epoch
                     "type": "long",
-                    "index": "not_analyzed"
+                    "index": True
                 },
                 "from": {
                     "type": "text"
                 },
                 "from_raw": {
-                    "type": "text",
-                    "index": "not_analyzed"
+                    "type": "keyword",
+                    "index": True
                 },
                 "in-reply-to": {
-                    "type": "text",
-                    "index": "not_analyzed"
+                    "type": "keyword",
+                    "index": True
                 },
                 "list": {
                     "type": "text"
                 },
                 "list_raw": {
-                    "type": "text",
-                    "index": "not_analyzed"
+                    "type": "keyword",
+                    "index": True
                 },
                 "message-id": {
-                    "type": "text",
-                    "index": "not_analyzed"
+                    "type": "keyword",
+                    "index": True
                 },
                 "mid": {
                     "type": "text"
@@ -296,16 +296,13 @@ def createIndexes():
             }
         },
         "mbox_source": {
-            "_all": {
-                "enabled": False  # this doc type is not searchable
-            },
             "properties": {
                 "source": {
                     "type": "binary"
                 },
                 "message-id": {
-                    "type": "text",
-                    "index": "not_analyzed"
+                    "type": "keyword",
+                    "index": True
                 },
                 "mid": {
                     "type": "text"
@@ -313,32 +310,26 @@ def createIndexes():
             }
         },
         "mailinglists": {
-            "_all": {
-                "enabled": False  # this doc type is not searchable
-            },
             "properties": {
                 "description": {
-                    "type": "text",
-                    "index": "not_analyzed"
+                    "type": "keyword",
+                    "index": True
                 },
                 "list": {
-                    "type": "text",
-                    #               "index" : "not_analyzed"
+                    "type": "keyword",
+                    "index": True
                 },
                 "name": {
-                    "type": "text",
-                    "index": "not_analyzed"
+                    "type": "keyword",
+                    "index": True
                 }
             }
         },
         "account": {
-            "_all": {
-                "enabled": False  # this doc type is not searchable
-            },
             "properties": {
                 "cid": {
-                    "type": "text",
-                    "index": "not_analyzed"
+                    "type": "keyword",
+                    "index": True
                 },
                 "credentials": {
                     "properties": {
@@ -346,45 +337,42 @@ def createIndexes():
                             "type": "object"
                         },
                         "email": {
-                            "type": "text",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": True
                         },
                         "fullname": {
-                            "type": "text",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": True
                         },
                         "uid": {
-                            "type": "text",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": True
                         }
                     }
                 },
                 "internal": {
                     "properties": {
                         "cookie": {
-                            "type": "text",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": True
                         },
                         "ip": {
-                            "type": "text",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": True
                         },
                         "oauth_used": {
-                            "type": "text",
-                            "index": "not_analyzed"
+                            "type": "keyword",
+                            "index": True
                         }
                     }
                 },
                 "request_id": {
-                    "type": "text",
-                    "index": "not_analyzed"
+                    "type": "keyword",
+                    "index": True
                 }
             }
         },
         "notifications": {
-            "_all": {
-                "enabled": False  # this doc type is not searchable
-            },
             "properties": {
                 "date": {
                     "type": "date",
@@ -396,46 +384,40 @@ def createIndexes():
                 },
                 "from": {
                     "type": "text",
-                    #               "index" : "not_analyzed"
                 },
                 "in-reply-to": {
-                    "type": "text",
-                    "index": "not_analyzed"
+                    "type": "keyword",
+                    "index": True
                 },
                 "list": {
                     "type": "text",
-                    #               "index" : "not_analyzed"
                 },
                 "message-id": {
-                    "type": "text",
-                    "index": "not_analyzed"
+                    "type": "keyword",
+                    "index": True
                 },
                 "mid": {
                     "type": "text",
-                    #               "index" : "not_analyzed"
                 },
                 "private": {
                     "type": "boolean"
                 },
                 "recipient": {
-                    "type": "text",
-                    "index": "not_analyzed"
+                    "type": "keyword",
+                    "index": True
                 },
                 "seen": {
                     "type": "long"
                 },
                 "subject": {
                     "type": "text",
-                    "fielddata": True  # dropped later if DB_MAJOR==2
-                    #               "index" : "not_analyzed"
                 },
                 "to": {
                     "type": "text",
-                    #               "index" : "not_analyzed"
                 },
                 "type": {
-                    "type": "text",
-                    "index": "not_analyzed"
+                    "type": "keyword",
+                    "index": True
                 }
             }
         }
