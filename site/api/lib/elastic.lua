@@ -76,7 +76,7 @@ local function performRequest(url, query, ok404)
     local result, hc = http.request{
         url = url,
         headers = {
-            ["Content-Length"] = string.len(js)
+            ["Content-Length"] = string.len(js),
             ["Content-Type"] = "application/json"
         },
         source = ltn12.source.string(js)
