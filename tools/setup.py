@@ -304,9 +304,6 @@ def createIndex():
           }
         },
         "mbox_source" : {
-          "_all": {
-            "enabled": False # this doc type is not searchable
-          },
           "properties" : {
             "source" : {
               "type" : "binary"
