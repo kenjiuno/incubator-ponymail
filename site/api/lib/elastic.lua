@@ -72,7 +72,13 @@ local function performRequest(url, query, ok404)
     if type(query) == "table" then
         js = JSON.encode(query)
     end
-    local result, hc = http.request(url, js)
+    local result, hc = http.request{
+        url = url,
+        headers = {
+            ["Content-Type"] = "application/json"
+        },
+        source = js
+    }
     checkReturnDetail(hc, ok404, result)
     local json = JSON.decode(result)
     -- TODO should we return the http status code?
